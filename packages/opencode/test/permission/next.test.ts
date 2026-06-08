@@ -563,11 +563,11 @@ it.instance(
     Effect.gen(function* () {
       const result = yield* ask({
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
-        patterns: ["ls"],
+        permission: "edit",
+        patterns: ["foo.ts"],
         metadata: {},
         always: [],
-        ruleset: [{ permission: "bash", pattern: "*", action: "allow" }],
+        ruleset: [{ permission: "edit", pattern: "*", action: "allow" }],
       })
       expect(result).toBeUndefined()
     }),
@@ -581,11 +581,13 @@ it.instance(
       const err = yield* fail(
         ask({
           sessionID: SessionID.make("session_test"),
-          permission: "bash",
-          patterns: ["rm -rf /"],
+          // Uses "edit" (not "bash") because bash is governed by the air-gap
+          // allowlist and ignores config rules; this asserts the generic engine.
+          permission: "edit",
+          patterns: ["foo.ts"],
           metadata: {},
           always: [],
-          ruleset: [{ permission: "bash", pattern: "*", action: "deny" }],
+          ruleset: [{ permission: "edit", pattern: "*", action: "deny" }],
         }),
       )
       expect(err).toBeInstanceOf(PermissionV1.DeniedError)
@@ -782,10 +784,10 @@ it.instance(
       const fiber = yield* ask({
         id: PermissionV1.ID.make("per_test3"),
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
-        patterns: ["ls"],
+        permission: "edit",
+        patterns: ["foo.ts"],
         metadata: {},
-        always: ["ls"],
+        always: ["foo.ts"],
         ruleset: [],
       }).pipe(Effect.forkScoped)
 
@@ -795,8 +797,8 @@ it.instance(
 
       const result = yield* ask({
         sessionID: SessionID.make("session_test2"),
-        permission: "bash",
-        patterns: ["ls"],
+        permission: "edit",
+        patterns: ["foo.ts"],
         metadata: {},
         always: [],
         ruleset: [],
@@ -1091,13 +1093,15 @@ it.instance(
       const err = yield* fail(
         ask({
           sessionID: SessionID.make("session_test"),
-          permission: "bash",
-          patterns: ["echo hello", "rm -rf /"],
+          // "edit" (not "bash"): bash ignores config rules under the air-gap
+          // allowlist, so the generic multi-pattern deny is asserted via edit.
+          permission: "edit",
+          patterns: ["a.ts", "b.ts"],
           metadata: {},
           always: [],
           ruleset: [
-            { permission: "bash", pattern: "*", action: "allow" },
-            { permission: "bash", pattern: "rm *", action: "deny" },
+            { permission: "edit", pattern: "*", action: "allow" },
+            { permission: "edit", pattern: "b.ts", action: "deny" },
           ],
         }),
       )
@@ -1112,11 +1116,11 @@ it.instance(
     Effect.gen(function* () {
       const result = yield* ask({
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
-        patterns: ["echo hello", "ls -la", "pwd"],
+        permission: "edit",
+        patterns: ["a.ts", "b.ts", "c.ts"],
         metadata: {},
         always: [],
-        ruleset: [{ permission: "bash", pattern: "*", action: "allow" }],
+        ruleset: [{ permission: "edit", pattern: "*", action: "allow" }],
       })
       expect(result).toBeUndefined()
     }),
@@ -1130,13 +1134,16 @@ it.instance(
       const err = yield* fail(
         ask({
           sessionID: SessionID.make("session_test"),
-          permission: "bash",
-          patterns: ["echo hello", "rm -rf /"],
+          // "edit" (not "bash"): bash ignores config rules under the air-gap
+          // allowlist; this asserts the generic engine denies when a later
+          // pattern is deny even though an earlier one only asked.
+          permission: "edit",
+          patterns: ["a.ts", "b.ts"],
           metadata: {},
           always: [],
           ruleset: [
-            { permission: "bash", pattern: "echo *", action: "ask" },
-            { permission: "bash", pattern: "rm *", action: "deny" },
+            { permission: "edit", pattern: "a.ts", action: "ask" },
+            { permission: "edit", pattern: "b.ts", action: "deny" },
           ],
         }),
       )

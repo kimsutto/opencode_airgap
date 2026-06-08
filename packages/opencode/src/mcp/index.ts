@@ -526,7 +526,10 @@ export const layer = Layer.effect(
       Effect.fn("MCP.state")(function* () {
         const cfg = yield* cfgSvc.get()
         const bridge = yield* EffectBridge.make()
-        const config = cfg.mcp ?? {}
+        // Air-gap: MCP is disabled. Drop all configured servers so none ever
+        // connect (no process spawn / network), regardless of config. The
+        // model-facing guarantee lives in `tools()` below. See README "mcp 제한".
+        const config: NonNullable<typeof cfg.mcp> = {}
         const s: State = {
           config: {},
           status: {},
@@ -671,6 +674,10 @@ export const layer = Layer.effect(
 
     const tools = Effect.fn("MCP.tools")(function* () {
       const result: Record<string, Tool> = {}
+      // Air-gap: MCP is disabled — never surface MCP tools to the model, even if
+      // a server was added at runtime via `opencode mcp`/HTTP. This is the
+      // definitive guarantee that the agent cannot use MCP. See README "mcp 제한".
+      return result
       const s = yield* InstanceState.get(state)
 
       const cfg = yield* cfgSvc.get()

@@ -7,8 +7,78 @@ import os from "os"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { EventV2 } from "@opencode-ai/core/event"
+import bashAllowlist from "./bash-allowlist.json"
+import toolPolicy from "./tool-policy.json"
 
 const log = Log.create({ service: "permission" })
+
+/**
+ * Air-gapped security policy for the bash/shell tool.
+ *
+ * Shell commands are governed SOLELY by the hardcoded allowlist in
+ * ./bash-allowlist.json, independent of config rules or session ("always")
+ * approvals. The allowlist has tiers of wildcard patterns matched against
+ * each parsed sub-command:
+ *   - `allow`:   runs without prompting (keep these narrow/exact).
+ *   - `ask`:     prompts every time (cross-platform / POSIX command names).
+ *   - `windows`: extra `ask` patterns merged in ONLY on Windows (cmd /
+ *                PowerShell command names). See README "Mac, Window 각각
+ *                command rules".
+ * Anything matching neither tier is denied. `allow` wins over `ask` on overlap.
+ *
+ * Config rules and saved approvals are never consulted for bash, so neither a
+ * higher-level option nor a once-off session approval can override this — an
+ * `ask` command keeps prompting on every invocation and is never escalated to
+ * `allow`. Edit ONLY bash-allowlist.json to change policy.
+ *
+ * The permission key is the literal "bash" (== ShellID.ToolID); kept as a
+ * string here to avoid importing the tool layer into the permission layer. A
+ * contract test asserts it stays equal to ShellID.ToolID, so an upstream rename
+ * (see tool/shell/id.ts "Rename with opencode 2.0") trips the test suite.
+ */
+export const BASH_PERMISSION = "bash"
+
+type BashAllowlist = { allow: ReadonlyArray<string>; ask: ReadonlyArray<string> }
+type BashAllowlistFile = BashAllowlist & { windows?: ReadonlyArray<string> }
+
+// Flatten the platform-aware file into the {allow, ask} shape `bashAction`
+// consumes: on Windows the `windows` patterns are appended to `ask`, elsewhere
+// they are ignored. Computed once at load against the running platform.
+const BASH_ALLOWLIST_FILE = bashAllowlist as BashAllowlistFile
+const BASH_ALLOWLIST: BashAllowlist = {
+  allow: BASH_ALLOWLIST_FILE.allow,
+  ask:
+    process.platform === "win32"
+      ? [...BASH_ALLOWLIST_FILE.ask, ...(BASH_ALLOWLIST_FILE.windows ?? [])]
+      : BASH_ALLOWLIST_FILE.ask,
+}
+
+/**
+ * Air-gapped policy for non-bash built-in tools, hardcoded in ./tool-policy.json
+ * and likewise immune to config/approvals. Maps a permission key to a forced
+ * action (e.g. websearch -> deny). Keys absent here fall through to the normal
+ * config-driven evaluation. `interactive_bash` may not exist in this build but
+ * is denied pre-emptively so a future upstream addition is locked down on
+ * arrival. Edit ONLY tool-policy.json to change policy.
+ */
+const TOOL_POLICY = toolPolicy as Readonly<Record<string, PermissionV1.Action>>
+
+/** Resolve the hardcoded effect for a single parsed bash sub-command. */
+export function bashAction(command: string, allowlist: BashAllowlist = BASH_ALLOWLIST): PermissionV1.Action {
+  if (allowlist.allow.some((pattern) => Wildcard.match(command, pattern))) return "allow"
+  if (allowlist.ask.some((pattern) => Wildcard.match(command, pattern))) return "ask"
+  return "deny"
+}
+
+/**
+ * The hardcoded air-gap action for a permission/pattern, or `undefined` when no
+ * hardcoded policy applies and normal config evaluation should run. Bash uses
+ * the allowlist; other keys use the flat tool-policy map.
+ */
+export function hardcodedAction(permission: string, command: string): PermissionV1.Action | undefined {
+  if (permission === BASH_PERMISSION) return bashAction(command)
+  return TOOL_POLICY[permission]
+}
 
 export const Event = {
   Asked: EventV2.define({ type: "permission.asked", schema: PermissionV1.Request.fields }),
@@ -83,7 +153,13 @@ export const layer = Layer.effect(
       let needsAsk = false
 
       for (const pattern of request.patterns) {
-        const rule = evaluate(request.permission, pattern, ruleset, approved)
+        // Bash and the hardcoded tool-policy keys bypass config/approved rules
+        // entirely (air-gap), so these policies cannot be overridden. Everything
+        // else falls through to normal config-driven evaluation.
+        const forced = hardcodedAction(request.permission, pattern)
+        const rule: PermissionV1.Rule = forced
+          ? { permission: request.permission, pattern: "*", action: forced }
+          : evaluate(request.permission, pattern, ruleset, approved)
         log.info("evaluated", { permission: request.permission, pattern, action: rule })
         if (rule.action === "deny") {
           return yield* new PermissionV1.DeniedError({
