@@ -82,7 +82,7 @@ export function Home() {
         {/* Air-gap: privacy notice shown on the home screen at startup. See README "개인정보보호문구". */}
         <box flexShrink={0} paddingTop={1} alignItems="center">
           <text fg={theme.warning} selectable={false}>
-            ⚠ 개인정보·기밀정보를 입력하지 마세요 (Do not enter personal or confidential information)
+            개인(신용)정보, 민감정보 등을 포함한 내용은 입력하지 않도록 주의해 주시기 바랍니다.
           </text>
         </box>
         <box height={1} minHeight={0} flexShrink={1} />

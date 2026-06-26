@@ -50,6 +50,21 @@ const createEmbeddedWebUIBundle = async () => {
 
 const embeddedFileMap = skipEmbedWebUi ? null : await createEmbeddedWebUIBundle()
 
+// Compliance log endpoint is baked in at build time from `.env` (kept out of git).
+// Falls back to an empty string, which disables remote compliance logging.
+const complianceEndpoint = (() => {
+  if (process.env.OPENCODE_COMPLIANCE_ENDPOINT) return process.env.OPENCODE_COMPLIANCE_ENDPOINT
+  const envPath = path.join(dir, ".env")
+  if (fs.existsSync(envPath)) {
+    for (const raw of fs.readFileSync(envPath, "utf8").split("\n")) {
+      const match = raw.match(/^\s*OPENCODE_COMPLIANCE_ENDPOINT\s*=\s*(.*)$/)
+      if (match) return match[1].trim().replace(/^["']|["']$/g, "")
+    }
+  }
+  return ""
+})()
+console.log(`compliance endpoint: ${complianceEndpoint || "(none — remote logging disabled)"}`)
+
 const allTargets: {
   os: string
   arch: "arm64" | "x64"
@@ -191,6 +206,7 @@ for (const item of targets) {
       OTUI_TREE_SITTER_WORKER_PATH: bunfsRoot + workerRelativePath,
       OPENCODE_WORKER_PATH: workerPath,
       OPENCODE_CHANNEL: `'${Script.channel}'`,
+      OPENCODE_COMPLIANCE_ENDPOINT: JSON.stringify(complianceEndpoint),
       OPENCODE_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "",
       ...(item.os === "linux" ? { "process.env.OPENTUI_LIBC": JSON.stringify(item.abi ?? "glibc") } : {}),
     },

@@ -124,6 +124,13 @@ export const Info = Schema.Struct({
   attachment: Schema.optional(ConfigAttachmentV1.Info).annotate({
     description: "Attachment processing configuration, including image size limits and resizing behavior",
   }),
+  compliance: Schema.optional(
+    Schema.Struct({
+      endpoint: Schema.optional(Schema.String).annotate({
+        description: "Remote HTTP endpoint for compliance log transmission",
+      }),
+    }),
+  ).annotate({ description: "Compliance logging configuration" }),
   enterprise: Schema.optional(
     Schema.Struct({ url: Schema.optional(Schema.String).annotate({ description: "Enterprise URL" }) }),
   ),

@@ -1,6 +1,7 @@
 import type {
   Hooks,
   PluginInput,
+  PluginOptions,
   Plugin as PluginInstance,
   PluginModule,
   WorkspaceAdapter as PluginWorkspaceAdapter,
@@ -27,6 +28,7 @@ import { PluginLoader } from "./loader"
 import { parsePluginSpecifier, readPluginId, readV1Plugin, resolvePluginId } from "./shared"
 import { registerAdapter } from "@/control-plane/adapters"
 import type { WorkspaceAdapter } from "@/control-plane/types"
+import { ComplianceLogPlugin } from "@/compliance/plugin"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { InstallationChannel } from "@opencode-ai/core/installation/version"
@@ -63,7 +65,11 @@ export function experimentalWebSocketsEnabled(input: { enabled: boolean; channel
 }
 
 // Built-in plugins that are directly imported (not installed from npm)
-function internalPlugins(flags: RuntimeFlags.Info): PluginInstance[] {
+function internalPlugins(flags: RuntimeFlags.Info, internalOptions: PluginOptions): PluginInstance[] {
+  function ComplianceLogInternalPlugin(input: PluginInput) {
+    return ComplianceLogPlugin(input, internalOptions)
+  }
+
   return [
     // Temporary rollout: pre-release builds use WebSockets by default; releases require explicit opt-in.
     (input) =>
@@ -74,6 +80,7 @@ function internalPlugins(flags: RuntimeFlags.Info): PluginInstance[] {
     GitlabAuthPlugin,
     PoeAuthPlugin,
     CloudflareWorkersAuthPlugin,
+    ComplianceLogInternalPlugin,
     CloudflareAIGatewayAuthPlugin,
     AzureAuthPlugin,
     DigitalOceanAuthPlugin,
@@ -162,7 +169,8 @@ export const layer = Layer.effect(
           $: typeof Bun === "undefined" ? undefined : Bun.$,
         }
 
-        for (const plugin of flags.disableDefaultPlugins ? [] : internalPlugins(flags)) {
+        const internalOptions = { compliance: cfg.compliance }
+        for (const plugin of flags.disableDefaultPlugins ? [] : internalPlugins(flags, internalOptions)) {
           log.info("loading internal plugin", { name: plugin.name })
           const init = yield* Effect.tryPromise({
             try: () => plugin(input),
