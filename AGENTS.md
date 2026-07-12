@@ -1,3 +1,20 @@
+# 프로젝트 지식 베이스
+
+**갱신일:** 2026-07-12
+**커밋:** `6e2f295bb`
+**브랜치:** `release_airgap`
+
+## 포크 개요
+
+이 저장소는 upstream opencode에 사내 통제 기능을 추가한 포크다. 회사 변경은 `origin/dev` 위의 `ad909c5b8`(2026-06-09)부터 시작하며, 현재 HEAD까지 2개 커밋과 16개 파일로 한정된다. upstream 비교 기준은 `origin/dev`로 삼는다.
+
+- 폐쇄망 통제: `packages/opencode/src/permission`의 하드코딩된 셸/도구 정책과 `packages/opencode/src/mcp/index.ts`의 MCP 차단.
+- 감사 통제: `packages/opencode/src/compliance`의 내장 컴플라이언스 플러그인. 설정, 플러그인 부트스트랩, 바이너리 빌드 경로에 연결된다.
+- 사용자 고지: `packages/tui/src/routes/home.tsx`의 한국어 개인정보 경고 문구.
+- 코드는 일부 도구와 MCP를 제한하지만 그 자체로 모든 네트워크 송신을 차단하지 않는다. 업데이트 기능, provider/auth 연동, `webfetch`, 사용자가 승인한 셸 명령은 별도 통제 대상이다.
+
+## 저장소 명령
+
 - To regenerate the JavaScript SDK, run `./packages/sdk/js/script/build.ts`.
 - The default branch in this repo is `dev`.
 - Local `main` ref may not exist; use `dev` or `origin/dev` for diffs.

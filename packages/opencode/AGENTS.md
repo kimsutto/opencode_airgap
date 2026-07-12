@@ -1,5 +1,19 @@
 # opencode database guide
 
+## 사내 포크 경계
+
+- `src/permission/AGENTS.md`는 사용자가 덮어쓸 수 없는 bash 및 내장 도구 정책을 다룬다. 정책 JSON은 일반 사용자 설정이 아니라 보안에 민감한 소스다.
+- `src/compliance/AGENTS.md`는 로컬·원격 감사 동작을 다룬다. endpoint는 `@opencode-ai/core` 설정, 플러그인 부트스트랩, `script/build.ts`의 컴파일 타임 주입 경로에 걸쳐 있다.
+- `src/mcp/index.ts`는 의도적으로 MCP를 두 번 차단한다. 시작 전에 설정된 서버를 버리고, `tools()`가 모델에 노출할 빈 레지스트리를 반환한다. upstream 병합 시 두 방어선을 모두 보존한다.
+- 한국어 개인정보 고지는 `@opencode-ai/tui`의 `packages/tui/src/routes/home.tsx`에 있다. 정책 집행을 UI로 옮기지 않는다.
+- 이 통제는 완전한 네트워크 샌드박스가 아니다. 배포 환경의 송신, 업데이트 기능, provider, auth 플러그인, `webfetch`, 승인된 셸 명령까지 통제하지 않았다면 바이너리를 완전한 폐쇄망 제품이라고 설명하지 않는다.
+
+## 포크 검증
+
+- 이 패키지에서 권한 정책 테스트를 실행한다: `bun test test/permission/bash-allowlist.test.ts test/permission/next.test.ts`.
+- opencode TypeScript를 변경한 뒤 이 디렉터리에서 `bun typecheck`를 실행한다.
+- 컴플라이언스와 MCP에는 현재 전용 자동화 테스트가 없다. 해당 경계를 변경하면 실제 동작을 직접 검증하고 가능한 경우 테스트를 추가한다.
+
 ## Database
 
 - **Schema**: Drizzle schema lives in `packages/core/src/**/*.sql.ts`.
