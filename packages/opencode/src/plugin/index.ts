@@ -31,6 +31,7 @@ import type { WorkspaceAdapter } from "@/control-plane/types"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { InstallationChannel } from "@opencode-ai/core/installation/version"
+import { CompanyPluginStartupError, ComplianceLogPlugin } from "@/company/compliance/plugin"
 
 type State = {
   hooks: Hooks[]
@@ -173,6 +174,13 @@ const layer = Layer.effect(
           )
           if (init._tag === "Some") hooks.push(init.value)
         }
+
+        hooks.push(
+          yield* Effect.tryPromise({
+            try: () => ComplianceLogPlugin(input),
+            catch: (cause) => new CompanyPluginStartupError({ plugin: "compliance", cause }),
+          }).pipe(Effect.orDie),
+        )
 
         const plugins = flags.pure ? [] : (cfg.plugin_origins ?? [])
         if (flags.pure && cfg.plugin_origins?.length) {
