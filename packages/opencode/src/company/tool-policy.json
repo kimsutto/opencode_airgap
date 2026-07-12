@@ -1,0 +1,5 @@
+{
+  "webfetch": "ask",
+  "websearch": "deny",
+  "interactive_bash": "deny"
+}

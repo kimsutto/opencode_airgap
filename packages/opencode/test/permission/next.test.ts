@@ -563,11 +563,11 @@ it.instance(
     Effect.gen(function* () {
       const result = yield* ask({
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
-        ruleset: [{ permission: "bash", pattern: "*", action: "allow" }],
+        ruleset: [{ permission: "read", pattern: "*", action: "allow" }],
       })
       expect(result).toBeUndefined()
     }),
@@ -581,11 +581,11 @@ it.instance(
       const err = yield* fail(
         ask({
           sessionID: SessionID.make("session_test"),
-          permission: "bash",
+          permission: "read",
           patterns: ["rm -rf /"],
           metadata: {},
           always: [],
-          ruleset: [{ permission: "bash", pattern: "*", action: "deny" }],
+          ruleset: [{ permission: "read", pattern: "*", action: "deny" }],
         }),
       )
       expect(err).toBeInstanceOf(PermissionV1.DeniedError)
@@ -782,7 +782,7 @@ it.instance(
       const fiber = yield* ask({
         id: PermissionV1.ID.make("per_test3"),
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: ["ls"],
@@ -795,7 +795,7 @@ it.instance(
 
       const result = yield* ask({
         sessionID: SessionID.make("session_test2"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
@@ -1091,13 +1091,13 @@ it.instance(
       const err = yield* fail(
         ask({
           sessionID: SessionID.make("session_test"),
-          permission: "bash",
+          permission: "read",
           patterns: ["echo hello", "rm -rf /"],
           metadata: {},
           always: [],
           ruleset: [
-            { permission: "bash", pattern: "*", action: "allow" },
-            { permission: "bash", pattern: "rm *", action: "deny" },
+            { permission: "read", pattern: "*", action: "allow" },
+            { permission: "read", pattern: "rm *", action: "deny" },
           ],
         }),
       )
@@ -1112,11 +1112,11 @@ it.instance(
     Effect.gen(function* () {
       const result = yield* ask({
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["echo hello", "ls -la", "pwd"],
         metadata: {},
         always: [],
-        ruleset: [{ permission: "bash", pattern: "*", action: "allow" }],
+        ruleset: [{ permission: "read", pattern: "*", action: "allow" }],
       })
       expect(result).toBeUndefined()
     }),
@@ -1130,13 +1130,13 @@ it.instance(
       const err = yield* fail(
         ask({
           sessionID: SessionID.make("session_test"),
-          permission: "bash",
+          permission: "read",
           patterns: ["echo hello", "rm -rf /"],
           metadata: {},
           always: [],
           ruleset: [
-            { permission: "bash", pattern: "echo *", action: "ask" },
-            { permission: "bash", pattern: "rm *", action: "deny" },
+            { permission: "read", pattern: "echo *", action: "ask" },
+            { permission: "read", pattern: "rm *", action: "deny" },
           ],
         }),
       )

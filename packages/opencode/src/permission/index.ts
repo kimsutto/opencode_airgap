@@ -7,6 +7,7 @@ import os from "os"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { EventV2 } from "@opencode-ai/core/event"
+import { CompanyPolicy } from "@/company/policy"
 
 const log = Log.create({ service: "permission" })
 
@@ -83,7 +84,10 @@ export const layer = Layer.effect(
       let needsAsk = false
 
       for (const pattern of request.patterns) {
-        const rule = evaluate(request.permission, pattern, ruleset, approved)
+        const forced = CompanyPolicy.hardcodedAction(request.permission, pattern)
+        const rule: PermissionV1.Rule = forced
+          ? { permission: request.permission, pattern: "*", action: forced }
+          : evaluate(request.permission, pattern, ruleset, approved)
         log.info("evaluated", { permission: request.permission, pattern, action: rule })
         if (rule.action === "deny") {
           return yield* new PermissionV1.DeniedError({

@@ -43,6 +43,8 @@
 
 ---
 
+사내 포크 운영자는 [한국어 유지보수 안내](docs/company/maintenance.ko.md)를 참고하세요.
+
 ### Installation
 
 ```bash
