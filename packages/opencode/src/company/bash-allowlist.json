@@ -1,6 +1,5 @@
 {
-  "allow": [],
-  "ask": [
+  "allow": [
     "ls *",
     "find *",
     "rg *",
@@ -9,7 +8,6 @@
     "cat *",
     "head *",
     "glob *",
-    "tail *",
     "less *",
     "wc *",
     "diff *",
@@ -26,6 +24,7 @@
     "mv *",
     "mkdir *",
     "touch *",
+    "tail *",
     "chmod *",
     "pwd *",
     "env *",
@@ -54,7 +53,9 @@
     "svn diff *",
     "svn log *",
     "svn info *",
-    "dd *",
+    "dd *"
+  ],
+  "ask": [
     "rmdir *",
     "rm *",
     "curl *",
@@ -105,11 +106,10 @@
     "git commit *",
     "git fetch *",
     "git pull *",
-    "git push *",
     "jdtls *",
     "eclipse.jdt.ls *"
   ],
-  "windows": [
+  "windowsAllow": [
     "dir *",
     "type *",
     "where *",
@@ -130,10 +130,6 @@
     "ren *",
     "rename *",
     "md *",
-    "rd *",
-    "del *",
-    "erase *",
-    "taskkill *",
     "Get-ChildItem *",
     "Get-Content *",
     "Get-Location *",
@@ -152,8 +148,14 @@
     "Write-Host *",
     "Copy-Item *",
     "Move-Item *",
-    "Remove-Item *",
     "New-Item *",
     "Rename-Item *"
+  ],
+  "windowsAsk": [
+    "rd *",
+    "del *",
+    "erase *",
+    "taskkill *",
+    "Remove-Item *"
   ]
 }

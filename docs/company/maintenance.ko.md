@@ -70,13 +70,23 @@ cd ../tui && bun typecheck
 
 E2E에서는 정상 경로와 잘못된 설정, 중단·재시작, cleanup을 확인한다. macOS에서는 arm64 native artifact를 검사한다. Windows에서는 x64 native artifact와 PowerShell/경로 구분자를 확인한다. 두 운영체제의 scenario ID와 artifact hash 기록 방식은 같아야 한다.
 
+## macOS에서 mac(siliconmac기준) 빌드 생성 
+```
+cd packages/opencode
+OPENCODE_COMPLIANCE_ENDPOINT="http://127.0.0.1:8788/opencode/compliance" \
+  bun run script/build.ts --single
+```
+산출물 위치 
+./dist/opencode-darwin-arm64/bin/opencode
+
+
 ## macOS에서 Windows 빌드 생성
 
 Windows 실행 파일은 macOS에서 전체 native build를 실행한 뒤 Windows x64 산출물만 가져간다. endpoint는 실행 시 환경변수가 아니라 빌드 시 `OPENCODE_COMPLIANCE_ENDPOINT` 값으로 바이너리에 고정된다.
 
 ```sh
 cd packages/opencode
-OPENCODE_COMPLIANCE_ENDPOINT="https://log.example.internal/opencode/compliance" bun run script/build.ts
+OPENCODE_COMPLIANCE_ENDPOINT="http://127.0.0.1:8788/opencode/compliance" bun run script/build.ts
 ```
 
 Windows x64 산출물은 다음 경로에 생성된다.

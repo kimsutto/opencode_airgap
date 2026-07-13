@@ -11,7 +11,8 @@ export type BashAllowlist = {
 }
 
 type BashAllowlistFile = BashAllowlist & {
-  readonly windows?: readonly string[]
+  readonly windowsAllow?: readonly string[]
+  readonly windowsAsk?: readonly string[]
 }
 
 class InvalidCompanyPolicyError extends Error {
@@ -23,13 +24,16 @@ class InvalidCompanyPolicyError extends Error {
 }
 
 const BASH_ALLOWLIST_FILE: BashAllowlistFile = bashAllowlist
-const BASH_ALLOWLIST: BashAllowlist = {
-  allow: BASH_ALLOWLIST_FILE.allow,
-  ask:
-    process.platform === "win32"
-      ? [...BASH_ALLOWLIST_FILE.ask, ...(BASH_ALLOWLIST_FILE.windows ?? [])]
-      : BASH_ALLOWLIST_FILE.ask,
-}
+const BASH_ALLOWLIST: BashAllowlist =
+  process.platform === "win32"
+    ? {
+        allow: [...BASH_ALLOWLIST_FILE.allow, ...(BASH_ALLOWLIST_FILE.windowsAllow ?? [])],
+        ask: [...BASH_ALLOWLIST_FILE.ask, ...(BASH_ALLOWLIST_FILE.windowsAsk ?? [])],
+      }
+    : {
+        allow: BASH_ALLOWLIST_FILE.allow,
+        ask: BASH_ALLOWLIST_FILE.ask,
+      }
 const TOOL_POLICY = Object.fromEntries(
   Object.entries(toolPolicy).map(([permission, action]) => [permission, policyAction(action)]),
 )
