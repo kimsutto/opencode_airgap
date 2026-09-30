@@ -24,6 +24,7 @@ const placeholder = {
 
 export function Home() {
   const route = useRouteData("home")
+  const theme = useTheme()
   const promptRef = usePromptRef()
   const [ref, setRef] = createSignal<PromptRef | undefined>()
   const args = useArgs()
@@ -97,6 +98,11 @@ export function Home() {
           <Logo />
         </box>
         <box height={1} flexShrink={0} />
+        <box flexShrink={0} paddingTop={1} alignItems="center">
+          <text fg={theme.text.feedback.warning.base}>
+            개인(신용)정보, 민감정보 등을 포함한 내용은 입력하지 않도록 주의해 주시기 바랍니다.
+          </text>
+        </box>
         <UpdateNotification width={logoWidth()} />
         <box width="100%" maxWidth={75} zIndex={1000} paddingTop={1} flexShrink={0} position="relative">
           <Prompt ref={bind} placeholders={placeholder} disabled={forms().length > 0} />

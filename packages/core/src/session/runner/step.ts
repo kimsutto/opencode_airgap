@@ -12,6 +12,8 @@ import {
 import type { Agent } from "@opencode/schema/agent"
 import { Cause, Clock, Data, Effect, Exit, Fiber, Option, Stream } from "effect"
 import { SessionError } from "@opencode/schema/session-error"
+import { Database } from "../../database/database.js"
+import { CompanyAudit } from "../../company/audit.js"
 import { Bus } from "../../bus.js"
 import { Permission } from "../../permission.js"
 import { Snapshot } from "../../snapshot.js"
@@ -64,6 +66,7 @@ const RESULT_MISSING = { type: "tool.result-missing", message: "Provider did not
 
 /** Captures Location-scoped dependencies without introducing another service or execution loop. */
 export const make = Effect.gen(function* () {
+  const database = yield* Database.Service
   const bus = yield* Bus.Service
   const llm = yield* LLMClient.Service
   const snapshots = yield* Snapshot.Service
@@ -237,7 +240,7 @@ export const make = Effect.gen(function* () {
             ? { cost: SessionUsage.calculateCost(input.model.cost, record.finish.tokens), tokens: record.finish.tokens }
             : undefined
           if (record.failure) yield* publisher.publishStepFailure({ ...usage, snapshot, files })
-          if (record.finish && usage && !record.failure)
+          if (record.finish && usage && !record.failure) {
             yield* bus.publish(SessionEvent.Step.Ended, {
               sessionID: input.sessionID,
               assistantMessageID: yield* publisher.startAssistant(),
@@ -248,6 +251,8 @@ export const make = Effect.gen(function* () {
               snapshot,
               files,
             })
+            yield* CompanyAudit.assistant(database, input.sessionID, input.assistantMessageID)
+          }
         }
 
         if (

@@ -1,3 +1,5 @@
+[사내 v2 병행 체험 및 빌드 안내](docs/company/trial.ko.md)
+
 <p align="center">
   <a href="https://opencode.ai">
     <picture>

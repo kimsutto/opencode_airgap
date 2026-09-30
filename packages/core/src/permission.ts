@@ -11,6 +11,8 @@ import { SessionSchema } from "./session/schema.js"
 import { SessionStore } from "./session/store.js"
 import { Wildcard } from "./util/wildcard.js"
 import { PermissionSaved } from "./permission/saved.js"
+import { CompanyPolicy } from "./company/policy.js"
+import { CompanyAudit } from "./company/audit.js"
 import { PluginHooks } from "./plugin/hooks.js"
 
 const PermissionEffect = Permission.Effect
@@ -172,6 +174,12 @@ const layer = Layer.effect(
 
     const evaluateInput = Effect.fnUntraced(function* (input: AssertInput) {
       const rules = yield* configured(input.sessionID, input.agent)
+      const forced = input.resources.map((resource) => CompanyPolicy.hardcodedAction(input.action, resource))
+      if (CompanyPolicy.hardcodedAction(input.action, "") !== undefined) {
+        const effect: Permission.Effect =
+          forced.includes("deny") || forced.length === 0 ? "deny" : forced.includes("ask") ? "ask" : "allow"
+        return { effect, rules: [{ action: input.action, resource: "*", effect }], message: undefined }
+      }
       if (denied(input, rules)) return { effect: "deny" as const, rules }
       const all = [...rules, ...(yield* savedRules())]
       const effects = input.resources.map((resource) => evaluate(input.action, resource, all).effect)
@@ -194,7 +202,7 @@ const layer = Layer.effect(
         sessionID: input.sessionID,
         action: input.action,
         resources: input.resources,
-        save: input.save,
+        save: CompanyPolicy.hardcodedAction(input.action, "") === undefined ? input.save : undefined,
         metadata: input.metadata,
         source: input.source,
         message,
@@ -212,6 +220,7 @@ const layer = Layer.effect(
           }
           if (pending.has(request.id))
             return yield* Effect.die(new Error(`Duplicate pending permission ID: ${request.id}`))
+          yield* CompanyAudit.emit(request.sessionID, "permission.asked", request)
           pending.set(request.id, item)
           yield* bus
             .publish(Permission.Event.Asked, request)
@@ -267,6 +276,7 @@ const layer = Layer.effect(
         Effect.gen(function* () {
           const existing = pending.get(input.requestID)
           if (!existing) return yield* new NotFoundError({ requestID: input.requestID })
+          yield* CompanyAudit.emit(existing.request.sessionID, "permission.replied", input)
           yield* bus.publish(Permission.Event.Replied, {
             sessionID: existing.request.sessionID,
             requestID: existing.request.id,

@@ -8,6 +8,7 @@ import { Bus } from "@opencode/core/bus"
 import { Location } from "@opencode/core/location"
 import { Permission } from "@opencode/core/permission"
 import { PermissionTable } from "@opencode/core/permission/sql"
+import { PluginHooks } from "@opencode/core/plugin/hooks"
 import { PermissionSaved } from "@opencode/core/permission/saved"
 import { Project } from "@opencode/core/project"
 import { ProjectTable } from "@opencode/core/project/sql"
@@ -26,7 +27,15 @@ const current = Layer.succeed(
 )
 const it = testEffect(
   AppNodeBuilder.build(
-    LayerNode.group([Database.node, Bus.node, SessionStore.node, PermissionSaved.node, Agent.node, Permission.node]),
+    LayerNode.group([
+      Database.node,
+      Bus.node,
+      SessionStore.node,
+      PermissionSaved.node,
+      Agent.node,
+      PluginHooks.node,
+      Permission.node,
+    ]),
     [Location.node.replace(current)],
   ),
 )
@@ -215,7 +224,7 @@ describe("Permission", () => {
     Effect.gen(function* () {
       yield* setup([{ action: "*", resource: "*", effect: "allow" }])
       const service = yield* Permission.Service
-      const bash = assertion({ action: "bash", resources: ["pwd"] })
+      const bash = assertion({ action: "test.bash", resources: ["pwd"] })
       expect(yield* service.ask(bash)).toEqual({ id: Permission.ID.create("per_test"), effect: "allow" })
 
       yield* setRules([])
@@ -244,11 +253,15 @@ describe("Permission", () => {
 
       yield* setRules([])
       const saved = yield* PermissionSaved.Service
-      yield* saved.add({ projectID: Project.ID.global, action: "bash", resources: ["pwd"] })
-      yield* setSession([{ action: "bash", resource: "*", effect: "deny" }])
-      expect(yield* service.ask(assertion({ action: "bash", resources: ["pwd"] }))).toMatchObject({ effect: "deny" })
-      yield* setSession([{ action: "bash", resource: "*", effect: "ask" }])
-      expect(yield* service.ask(assertion({ action: "bash", resources: ["pwd"] }))).toMatchObject({ effect: "allow" })
+      yield* saved.add({ projectID: Project.ID.global, action: "test.bash", resources: ["pwd"] })
+      yield* setSession([{ action: "test.bash", resource: "*", effect: "deny" }])
+      expect(yield* service.ask(assertion({ action: "test.bash", resources: ["pwd"] }))).toMatchObject({
+        effect: "deny",
+      })
+      yield* setSession([{ action: "test.bash", resource: "*", effect: "ask" }])
+      expect(yield* service.ask(assertion({ action: "test.bash", resources: ["pwd"] }))).toMatchObject({
+        effect: "allow",
+      })
     }),
   )
 
@@ -256,17 +269,17 @@ describe("Permission", () => {
     Effect.gen(function* () {
       yield* setup()
       const saved = yield* PermissionSaved.Service
-      yield* saved.add({ projectID: Project.ID.global, action: "bash", resources: ["pwd"] })
+      yield* saved.add({ projectID: Project.ID.global, action: "test.bash", resources: ["pwd"] })
 
       const service = yield* Permission.Service
-      expect(yield* service.ask(assertion({ action: "bash", resources: ["pwd"] }))).toEqual({
+      expect(yield* service.ask(assertion({ action: "test.bash", resources: ["pwd"] }))).toEqual({
         id: Permission.ID.create("per_test"),
         effect: "allow",
       })
       expect(yield* service.list()).toEqual([])
 
-      yield* setRules([{ action: "bash", resource: "*", effect: "deny" }])
-      expect(yield* service.ask(assertion({ action: "bash", resources: ["pwd"] }))).toEqual({
+      yield* setRules([{ action: "test.bash", resource: "*", effect: "deny" }])
+      expect(yield* service.ask(assertion({ action: "test.bash", resources: ["pwd"] }))).toEqual({
         id: Permission.ID.create("per_test"),
         effect: "deny",
       })
@@ -533,7 +546,7 @@ describe("shell scanner permission impact", () => {
       {
         name: "exact configured approvals",
         saved: [],
-        rules: fixture.exact.map((resource): Permission.Rule => ({ action: "shell", resource, effect: "allow" })),
+        rules: fixture.exact.map((resource): Permission.Rule => ({ action: "test.shell", resource, effect: "allow" })),
         expected: fixture.exactEffect,
       },
       {
@@ -545,7 +558,7 @@ describe("shell scanner permission impact", () => {
       {
         name: "configured deny despite saved wildcard",
         saved: ["*"],
-        rules: [{ action: "shell", resource: fixture.denied, effect: "deny" }] satisfies Permission.Ruleset,
+        rules: [{ action: "test.shell", resource: fixture.denied, effect: "deny" }] satisfies Permission.Ruleset,
         expected: fixture.deniedEffect,
       },
     ] as const) {
@@ -553,7 +566,7 @@ describe("shell scanner permission impact", () => {
         Effect.gen(function* () {
           yield* setup(scenario.rules)
           const saved = yield* PermissionSaved.Service
-          yield* saved.add({ projectID: Project.ID.global, action: "shell", resources: scenario.saved })
+          yield* saved.add({ projectID: Project.ID.global, action: "test.shell", resources: scenario.saved })
           const service = yield* Permission.Service
 
           for (const [index, portable] of [false, true].entries()) {
@@ -562,7 +575,7 @@ describe("shell scanner permission impact", () => {
             expect(parsed.directories).toEqual([])
             const result = yield* service.ask(
               assertion({
-                action: "shell",
+                action: "test.shell",
                 resources: parsed.commands.map((command) => command.resource),
                 save: parsed.commands.map((command) => command.save),
               }),
@@ -672,7 +685,7 @@ describe("shell scanner permission impact", () => {
           const parsed = yield* ShellParse.scan(fixture.command, fixture.shell, "/project", { portable })
           const first = yield* service.ask(
             assertion({
-              action: "shell",
+              action: "test.shell",
               resources: parsed.commands.map((command) => command.resource),
               save: parsed.commands.map((command) => command.save),
             }),
@@ -690,7 +703,7 @@ describe("shell scanner permission impact", () => {
               const parsed = yield* ShellParse.scan(command, fixture.shell, "/project", { portable: target })
               const result = yield* service.ask(
                 assertion({
-                  action: "shell",
+                  action: "test.shell",
                   resources: parsed.commands.map((command) => command.resource),
                   save: parsed.commands.map((command) => command.save),
                 }),
@@ -706,4 +719,53 @@ describe("shell scanner permission impact", () => {
       )
     }
   }
+})
+
+describe("company policy", () => {
+  it.effect("company rules override configured, saved and plugin approvals", () =>
+    Effect.gen(function* () {
+      yield* setup([{ action: "*", resource: "*", effect: "allow" }])
+      const service = yield* Permission.Service
+      const saved = yield* PermissionSaved.Service
+      yield* saved.add({ projectID: Project.ID.global, action: "shell", resources: ["*"] })
+      const hooks = yield* PluginHooks.Service
+      yield* hooks.register("permission", "evaluate", (event) =>
+        Effect.sync(() => {
+          event.effect = "allow"
+        }),
+      )
+      expect(yield* service.ask(assertion({ action: "shell", resources: ["git status"] }))).toMatchObject({
+        effect: "allow",
+      })
+      expect(yield* service.ask(assertion({ action: "shell", resources: ["unknown-command"] }))).toMatchObject({
+        effect: "deny",
+      })
+      expect(yield* service.ask(assertion({ action: "websearch", resources: ["query"] }))).toMatchObject({
+        effect: "deny",
+      })
+      const first = yield* service.ask(
+        assertion({ action: "shell", resources: ["curl https://example.com"], save: ["curl *"] }),
+      )
+      expect(first.effect).toBe("ask")
+      expect((yield* service.get(first.id))?.save).toBeUndefined()
+      yield* service.reply({ requestID: first.id, reply: "always" })
+      const second = yield* service.ask(assertion({ action: "shell", resources: ["curl https://example.com"] }))
+      expect(second.effect).toBe("ask")
+      yield* service.reply({ requestID: second.id, reply: "once" })
+    }),
+  )
+  it.live("parsed compound commands cannot hide a denied command", () =>
+    Effect.gen(function* () {
+      yield* setup([{ action: "*", resource: "*", effect: "allow" }])
+      const service = yield* Permission.Service
+      for (const portable of [false, true]) {
+        const parsed = yield* ShellParse.scan("git status; forbidden-company-command", "bash", "/project", { portable })
+        expect(
+          yield* service.ask(
+            assertion({ action: "shell", resources: parsed.commands.map((command) => command.resource) }),
+          ),
+        ).toMatchObject({ effect: "deny" })
+      }
+    }),
+  )
 })

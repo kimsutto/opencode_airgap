@@ -12,5 +12,5 @@
     "rootDir": "src",
     "tsBuildInfoFile": "node_modules/.ts-dist/source.tsbuildinfo"
   },
-  "include": ["src"]
+  "include": ["src", "src/company/*.json"]
 }

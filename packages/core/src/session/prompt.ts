@@ -6,6 +6,7 @@ import { SessionInbox } from "@opencode/schema/session-inbox"
 import type { Session } from "@opencode/schema/session"
 import type { SessionMessage } from "@opencode/schema/session-message"
 import { FSUtil } from "@opencode/util/fs-util"
+import { CompanyAudit } from "../company/audit.js"
 import { Effect } from "effect"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -48,6 +49,17 @@ export const prepare = Effect.fn("SessionPrompt.prepare")(function* (request: {
       }),
       metadata: structuredClone(request.input.metadata),
       delivery: request.input.delivery ?? "steer",
+    })
+    yield* CompanyAudit.emit(request.session.id, "session.meta", {
+      location: request.session.location,
+      agent: request.session.agent,
+      model: request.session.model,
+    })
+    yield* CompanyAudit.emit(request.session.id, "user.message", {
+      messageID: request.messageID,
+      role: "user",
+      prompt: event.prompt,
+      location: request.session.location,
     })
     const input = event.prompt
     const files = input.files

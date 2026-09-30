@@ -149,6 +149,7 @@ export default { path: file, version: ${JSON.stringify(opencodePty.version)}, sh
       windows: {},
     },
     define: {
+      OPENCODE_COMPLIANCE_ENDPOINT: JSON.stringify(process.env.OPENCODE_COMPLIANCE_ENDPOINT ?? ""),
       OPENCODE_VERSION: `'${Script.version}'`,
       OPENCODE_CLI_NAME: "'opencode'",
       OPENCODE_CHANNEL: `'${Script.channel}'`,
