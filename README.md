@@ -1,3 +1,5 @@
+[사내 v1 병행 체험 및 빌드 안내](docs/company/trial.ko.md)
+
 <p align="center">
   <a href="https://opencode.ai">
     <picture>
@@ -42,6 +44,8 @@
 [![OpenCode Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://opencode.ai)
 
 ---
+
+사내 포크 운영자는 [한국어 유지보수 안내](docs/company/maintenance.ko.md)를 참고하세요.
 
 ### Installation
 

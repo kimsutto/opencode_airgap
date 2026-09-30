@@ -561,11 +561,11 @@ it.instance(
     Effect.gen(function* () {
       const result = yield* ask({
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
-        ruleset: [{ permission: "bash", pattern: "*", action: "allow" }],
+        ruleset: [{ permission: "read", pattern: "*", action: "allow" }],
       })
       expect(result).toBeUndefined()
     }),
@@ -579,11 +579,11 @@ it.instance(
       const err = yield* fail(
         ask({
           sessionID: SessionID.make("session_test"),
-          permission: "bash",
+          permission: "read",
           patterns: ["rm -rf /"],
           metadata: {},
           always: [],
-          ruleset: [{ permission: "bash", pattern: "*", action: "deny" }],
+          ruleset: [{ permission: "read", pattern: "*", action: "deny" }],
         }),
       )
       expect(err).toBeInstanceOf(PermissionV1.DeniedError)
@@ -597,11 +597,11 @@ it.instance(
     Effect.gen(function* () {
       const fiber = yield* ask({
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
-        ruleset: [{ permission: "bash", pattern: "*", action: "ask" }],
+        ruleset: [{ permission: "read", pattern: "*", action: "ask" }],
       }).pipe(Effect.forkScoped)
 
       expect(yield* waitForPending(1)).toHaveLength(1)
@@ -617,7 +617,7 @@ it.instance(
     Effect.gen(function* () {
       const fiber = yield* ask({
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: { cmd: "ls" },
         always: ["ls"],
@@ -632,7 +632,7 @@ it.instance(
       expect(items).toHaveLength(1)
       expect(items[0]).toMatchObject({
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: { cmd: "ls" },
         always: ["ls"],
@@ -663,7 +663,7 @@ it.instance(
 
       const fiber = yield* ask({
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: { cmd: "ls" },
         always: ["ls"],
@@ -684,7 +684,7 @@ it.instance(
         ),
       ).toMatchObject({
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
       })
 
@@ -703,7 +703,7 @@ it.instance(
       const fiber = yield* ask({
         id: PermissionV1.ID.make("per_test1"),
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
@@ -724,7 +724,7 @@ it.instance(
       const fiber = yield* ask({
         id: PermissionV1.ID.make("per_test2"),
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
@@ -748,7 +748,7 @@ it.instance(
       const fiber = yield* ask({
         id: PermissionV1.ID.make("per_test2b"),
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
@@ -780,7 +780,7 @@ it.instance(
       const fiber = yield* ask({
         id: PermissionV1.ID.make("per_test3"),
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: ["ls"],
@@ -793,7 +793,7 @@ it.instance(
 
       const result = yield* ask({
         sessionID: SessionID.make("session_test2"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
@@ -811,7 +811,7 @@ it.instance(
       const a = yield* ask({
         id: PermissionV1.ID.make("per_test4a"),
         sessionID: SessionID.make("session_same"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
@@ -847,7 +847,7 @@ it.instance(
       const a = yield* ask({
         id: PermissionV1.ID.make("per_test5a"),
         sessionID: SessionID.make("session_same"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: ["ls"],
@@ -857,7 +857,7 @@ it.instance(
       const b = yield* ask({
         id: PermissionV1.ID.make("per_test5b"),
         sessionID: SessionID.make("session_same"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
@@ -881,7 +881,7 @@ it.instance(
       const a = yield* ask({
         id: PermissionV1.ID.make("per_test6a"),
         sessionID: SessionID.make("session_a"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: ["ls"],
@@ -891,7 +891,7 @@ it.instance(
       const b = yield* ask({
         id: PermissionV1.ID.make("per_test6b"),
         sessionID: SessionID.make("session_b"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
@@ -924,7 +924,7 @@ it.instance(
       const fiber = yield* ask({
         id: PermissionV1.ID.make("per_test7"),
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
@@ -975,7 +975,7 @@ it.live("permission requests stay isolated by directory", () =>
         ask({
           id: PermissionV1.ID.make("per_dir_a"),
           sessionID: SessionID.make("session_dir_a"),
-          permission: "bash",
+          permission: "read",
           patterns: ["ls"],
           metadata: {},
           always: [],
@@ -990,7 +990,7 @@ it.live("permission requests stay isolated by directory", () =>
         ask({
           id: PermissionV1.ID.make("per_dir_b"),
           sessionID: SessionID.make("session_dir_b"),
-          permission: "bash",
+          permission: "read",
           patterns: ["pwd"],
           metadata: {},
           always: [],
@@ -1024,7 +1024,7 @@ it.instance(
       const fiber = yield* ask({
         id: PermissionV1.ID.make("per_dispose"),
         sessionID: SessionID.make("session_dispose"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
@@ -1051,7 +1051,7 @@ it.instance(
       const fiber = yield* ask({
         id: PermissionV1.ID.make("per_reload"),
         sessionID: SessionID.make("session_reload"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
@@ -1089,13 +1089,13 @@ it.instance(
       const err = yield* fail(
         ask({
           sessionID: SessionID.make("session_test"),
-          permission: "bash",
+          permission: "read",
           patterns: ["echo hello", "rm -rf /"],
           metadata: {},
           always: [],
           ruleset: [
-            { permission: "bash", pattern: "*", action: "allow" },
-            { permission: "bash", pattern: "rm *", action: "deny" },
+            { permission: "read", pattern: "*", action: "allow" },
+            { permission: "read", pattern: "rm *", action: "deny" },
           ],
         }),
       )
@@ -1110,11 +1110,11 @@ it.instance(
     Effect.gen(function* () {
       const result = yield* ask({
         sessionID: SessionID.make("session_test"),
-        permission: "bash",
+        permission: "read",
         patterns: ["echo hello", "ls -la", "pwd"],
         metadata: {},
         always: [],
-        ruleset: [{ permission: "bash", pattern: "*", action: "allow" }],
+        ruleset: [{ permission: "read", pattern: "*", action: "allow" }],
       })
       expect(result).toBeUndefined()
     }),
@@ -1128,13 +1128,13 @@ it.instance(
       const err = yield* fail(
         ask({
           sessionID: SessionID.make("session_test"),
-          permission: "bash",
+          permission: "read",
           patterns: ["echo hello", "rm -rf /"],
           metadata: {},
           always: [],
           ruleset: [
-            { permission: "bash", pattern: "echo *", action: "ask" },
-            { permission: "bash", pattern: "rm *", action: "deny" },
+            { permission: "read", pattern: "echo *", action: "ask" },
+            { permission: "read", pattern: "rm *", action: "deny" },
           ],
         }),
       )
@@ -1155,11 +1155,11 @@ it.instance(
       const fiber = yield* ask({
         id: PermissionV1.ID.make("per_reload"),
         sessionID: SessionID.make("session_reload"),
-        permission: "bash",
+        permission: "read",
         patterns: ["ls"],
         metadata: {},
         always: [],
-        ruleset: [{ permission: "bash", pattern: "*", action: "ask" }],
+        ruleset: [{ permission: "read", pattern: "*", action: "ask" }],
       }).pipe(Effect.forkScoped)
 
       const pending = yield* waitForPending(1)

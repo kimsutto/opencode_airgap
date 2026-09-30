@@ -170,7 +170,7 @@ describe("opencode run (non-interactive subprocess)", () => {
       Effect.gen(function* () {
         yield* llm.push(
           reply().reason("reasoning").text("before").tool("bash", {
-            command: "printf tool",
+            command: "echo -n tool",
             description: "Print deterministic output",
           }),
         )
