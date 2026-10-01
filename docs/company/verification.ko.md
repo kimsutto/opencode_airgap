@@ -1,5 +1,12 @@
 # 검증 기록 (v2)
 
+2026-10-01 인수인계: [HANDOFF.ko.txt](HANDOFF.ko.txt).
+v2는 여전히 loopback 감사 URL의 `2.0.20-company.1` 시험용 빌드다.
+추가로 subagent/ripgrep/command-subagent 26개와 TUI completion-notices/prompt-footer 6개 테스트가 통과했고,
+실제 CLI와 loopback 모델에서 자식 세션 실행·결과 반환·감사 기록을 확인했다.
+[사내 반입 체크리스트](checklist-v1.ko.txt)는 v1 company.2용이다.
+v1에서 새로 발견한 병렬 승인 결함은 인수인계에 기록했으며 v2의 동일 시나리오는 별도 검증이 필요하다.
+
 2026-09-30 KST, macOS Apple Silicon, Bun 1.4.2.
 
 - `packages/core`: 회사 정책/감사, 권한, 세션 step/prompt/runner/tool events 관련 400 pass, 0 fail (7 files).
