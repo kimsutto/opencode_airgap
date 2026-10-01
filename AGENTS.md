@@ -190,3 +190,11 @@ const table = sqliteTable("session", {
 - Keep event replay ownership separate from clustered Session execution ownership.
 - Keep the Instructions algebra and built-ins in `src/instructions`; keep instruction producers with their observed domains, and keep Session History selection plus `InstructionState` and `InstructionEntry` persistence Session-owned. `InstructionDiscovery` observes ambient global and upward-project instructions. The runner composes built-ins, discovery, guidance, and entries explicitly in `loadInstructions`; there is no instruction registry.
 - `session.instructions.updated` stores changed source keys and content hashes and may freeze rendered chronological update text. Blob values live once in `instruction_blob`; the projected `instruction_state` row is the normal boundary-processing source of current and initial values. Request assembly renders the epoch baseline from stored values, while later frozen updates enter history as durable System messages. Completed compaction moves the instruction epoch; Session movement retains it so destination instruction changes are chronological, while committed revert clears it. Forks adopt the parent's newest instruction values even when copied message history ends at an earlier boundary. Unavailable sources retain the last value and block only the initial complete delta.
+
+## Private Deployment Information
+
+- Never commit internal hostnames, actual audit endpoints, organization-identifying deployment values, credentials, or local deployment manifests to public Git, including documentation, handoffs, examples, test fixtures, and commit messages. A value need not be a token to be confidential.
+- Supply the audit endpoint privately through `OPENCODE_COMPLIANCE_ENDPOINT` at build time. Public files must use a generic placeholder or describe the environment variable without its value.
+- Keep actual deployment metadata, binaries, incident details, and support requests outside the repository or in the ignored `.company-private/` directory.
+- Before publishing, inspect every staged file and outgoing history for private deployment information. A new clone must configure its own private publication checks; local hooks are not distributed through Git.
+- Do not restore or merge pre-cleanup handoff history from an older clone or Git bundle. Start from the sanitized remote branches.

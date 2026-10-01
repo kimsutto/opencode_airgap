@@ -3,7 +3,7 @@ OpenCode 사내 적용 작업 인수인계
 
 0. 다음 Codex 세션이 먼저 읽을 내용
 
-현재 상태 (2026-10-01): 공개 문서를 정제하고 회사 브랜치 이력을 교체한다.
+현재 상태 (2026-10-01): 공개 문서 정제 및 회사 브랜치 이력 교체 완료.
 - 이전 인수인계 커밋은 재사용하지 말고 정제된 origin 브랜치를 기준으로 이어받는다.
 - origin/codex/company-v1 및 origin/codex/company-v2 생성 완료.
 - 최초 HTTPS 인증 실패와 GitHub integration의 쓰기 403 이후, 사용자가 GitHub CLI
@@ -11,7 +11,11 @@ OpenCode 사내 적용 작업 인수인계
 - /Users/a420591/.local/bin/gh 설치 및 macOS keyring 인증, Git HTTPS 연동 완료.
   로그인 토큰이나 비밀번호는 이 문서/저장소에 보존하지 않는다.
 - git push --atomic --set-upstream origin codex/company-v1 codex/company-v2 성공.
-- 이후 인수인계 상태 문서를 갱신한다. 현재 정확한 tip은 git log 및 git ls-remote로 확인.
+- 정제 후 원격을 새로 mirror clone하여 모든 공개 브랜치/태그의 Git 객체를 검사했다.
+  현재 정확한 tip은 git log 및 git ls-remote로 확인한다.
+- 기존 커밋의 서버 측 캐시 제거는 별도 비공개 지원 절차가 필요하며, 브랜치 정리와 구분한다.
+- 이 Mac에는 private publication hook이 설정되어 있다. 검사 패턴은 Git 외부에만 보관한다.
+  새 clone에는 자동 설치되지 않으므로 내부 값의 비공개 관리 원칙을 반드시 지킨다.
 - 원격 문서:
   https://github.com/kimsutto/opencode_airgap/blob/codex/company-v1/docs/company/HANDOFF.ko.txt
   https://github.com/kimsutto/opencode_airgap/blob/codex/company-v2/docs/company/HANDOFF.ko.txt
