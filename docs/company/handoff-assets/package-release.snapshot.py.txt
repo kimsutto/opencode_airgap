@@ -1,0 +1,85 @@
+import datetime
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import tarfile
+import zipfile
+
+source = Path('/Users/a420591/.codex/worktrees/company-v1-20260930/opencode_airgap')
+inputs = Path('/tmp/opencode-v1-release-inputs')
+output = Path('/Users/a420591/Desktop/OpenCode-v1-company.2')
+endpoint = os.environ['OPENCODE_COMPLIANCE_ENDPOINT']
+version = '1.18.33-company.2'
+revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=source, text=True).strip()
+output.mkdir(exist_ok=False)
+
+for name, target, archive_name, executable, launcher in [
+    ('Mac', 'opencode-darwin-arm64', 'ripgrep-15.1.0-aarch64-apple-darwin.tar.gz', 'opencode', 'start.command'),
+    ('Windows', 'opencode-windows-x64', 'ripgrep-15.1.0-x86_64-pc-windows-msvc.zip', 'opencode.exe', 'start.cmd'),
+]:
+    folder = output / name
+    (folder / 'config').mkdir(parents=True)
+    (folder / 'licenses').mkdir()
+    shutil.copy2(source / 'packages/opencode/dist' / target / 'bin' / executable, folder / executable)
+    shutil.copy2(source / 'LICENSE', folder / 'licenses/OpenCode-LICENSE.txt')
+    (folder / 'config/opencode.json').write_text('{\n  "autoupdate": false\n}\n')
+    launcher_text = (inputs / launcher).read_text()
+    (folder / launcher).write_bytes(launcher_text.replace('\n', '\r\n').encode('ascii') if name == 'Windows' else launcher_text.encode())
+    prefix = archive_name.removesuffix('.tar.gz').removesuffix('.zip')
+    rg = 'rg.exe' if name == 'Windows' else 'rg'
+    for member in [rg, 'COPYING', 'LICENSE-MIT', 'UNLICENSE']:
+        if name == 'Windows':
+            with zipfile.ZipFile(inputs / archive_name) as archive:
+                data = archive.read(prefix + '/' + member)
+        else:
+            with tarfile.open(inputs / archive_name) as archive:
+                data = archive.extractfile(prefix + '/' + member).read()
+        destination = folder / rg if member == rg else folder / 'licenses' / ('ripgrep-' + member + '.txt')
+        destination.write_bytes(data)
+    if name == 'Mac':
+        for file in [executable, rg, launcher]:
+            (folder / file).chmod(0o755)
+    architecture = 'Windows Intel/AMD 64비트 (x64)' if name == 'Windows' else 'Apple Silicon Mac (ARM64)'
+    example = 'start.cmd C:\\work\\project' if name == 'Windows' else './start.command /path/to/project'
+    (folder / '읽어주세요.txt').write_text(f'''OpenCode 사내 v1 / {version}
+
+대상: {architecture}
+1. 폴더 전체를 사내 PC의 쓰기 가능한 위치에 복사하거나 ZIP을 압축 해제합니다.
+2. 기존 사내 모델 설정 파일을 config/opencode.json에 넣습니다. 현재 파일에는 자동 업데이트 비활성화만 있습니다.
+   설정에 plugin 항목이 있으면 해당 플러그인과 의존성도 별도로 반입해야 합니다.
+3. {launcher}를 더블클릭합니다.
+4. Project folder에 작업할 프로젝트 폴더의 전체 경로를 입력하고 Enter를 누릅니다.
+   빈칸으로 Enter를 누르면 사용자 홈 폴더에서 실행합니다.
+
+터미널에서 실행할 경우: {example}
+설정 적용을 위해 opencode 실행파일 대신 {launcher}를 사용합니다.
+이 런처는 rg 경로, 독립된 v1 데이터 경로, 자동 업데이트 및 모델 목록 외부 조회 비활성화,
+내장 백그라운드 서브에이전트 활성화를 자동으로 적용합니다. 영구 시스템 환경변수는 변경하지 않습니다.
+
+감사 서버 (실행파일에 고정): {endpoint}
+감사 서버가 연결되지 않으면 정책에 따라 모델 실행이 차단됩니다.
+사내 모델 주소/API 키와 oh-my-openagent는 이 배포본에 포함하지 않았습니다.
+Windows의 Git 작업에는 기존 Git 설치가 필요합니다.
+macOS에서 실행 권한이 사라졌다면 폴더에서 chmod +x start.command opencode rg를 실행합니다.
+조직의 실행 허용/서명 정책이 적용되는 환경에서는 해당 절차를 따릅니다.
+
+검증: Mac 실행 확인. Windows는 교차 빌드이며 실제 Windows 실행 검증은 미실시.
+감사 서버 주소가 바이너리에 포함됐는지는 확인하며, 실제 서버로 테스트 로그를 전송하지 않습니다.
+소스: codex/company-v1 / {revision}
+SHA256SUMS.txt로 배포 파일 무결성을 확인할 수 있습니다.
+''', encoding='utf-8')
+    metadata = {
+        'version': version, 'sourceCommit': revision, 'sourceBranch': 'codex/company-v1',
+        'target': target, 'auditEndpoint': endpoint, 'ripgrepVersion': '15.1.0',
+        'builtAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        'bunVersion': '1.4.2', 'pluginIncluded': False,
+        'buildCommand': 'OPENCODE_VERSION=1.18.33-company.2 OPENCODE_COMPLIANCE_ENDPOINT=<auditEndpoint> ./script/company/build.sh --skip-install',
+        'ripgrepSource': next(x for x in json.loads((inputs / 'ripgrep-inputs.json').read_text()) if x['name'] == archive_name),
+    }
+    (folder / 'build-info.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + '\n')
+    checksum = '\n'.join(hashlib.sha256(file.read_bytes()).hexdigest() + '  ' + file.relative_to(folder).as_posix() for file in sorted(folder.rglob('*')) if file.is_file()) + '\n'
+    (folder / 'SHA256SUMS.txt').write_text(checksum)
+print(output)

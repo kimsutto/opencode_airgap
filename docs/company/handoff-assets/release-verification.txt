@@ -1,0 +1,6 @@
+Version: 1.18.33-company.2
+Mac: launcher --version and OpenCode debug rg search passed with only /usr/bin:/bin in the inherited PATH and a fresh profile.
+Windows: PE x86-64 executables inspected; not executed on Windows.
+Both: approved audit endpoint embedded (UTF-16LE), trial endpoint absent; bundled ripgrep official archive digests verified.
+Actual audit endpoint: not contacted; no synthetic logs sent.
+Source tree: unchanged from previously tested codex/company-v1.

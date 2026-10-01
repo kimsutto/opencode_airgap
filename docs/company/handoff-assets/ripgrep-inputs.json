@@ -1,0 +1,14 @@
+[
+  {
+    "name": "ripgrep-15.1.0-aarch64-apple-darwin.tar.gz",
+    "url": "https://github.com/BurntSushi/ripgrep/releases/download/15.1.0/ripgrep-15.1.0-aarch64-apple-darwin.tar.gz",
+    "sha256": "378e973289176ca0c6054054ee7f631a065874a352bf43f0fa60ef079b6ba715",
+    "githubDigestVerified": true
+  },
+  {
+    "name": "ripgrep-15.1.0-x86_64-pc-windows-msvc.zip",
+    "url": "https://github.com/BurntSushi/ripgrep/releases/download/15.1.0/ripgrep-15.1.0-x86_64-pc-windows-msvc.zip",
+    "sha256": "124510b94b6baa3380d051fdf4650eaa80a302c876d611e9dba0b2e18d87493a",
+    "githubDigestVerified": true
+  }
+]

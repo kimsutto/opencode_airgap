@@ -1,0 +1,7 @@
+2026-10-01 KST / Bun 1.4.2 / company-v1 implementation 624b723a91
+Actual Permission.Service with existing repository instance fixture, no shell/provider execution.
+Two pending bash permissions: curl --version, same session.
+Reply always to first request.
+Expected remaining pending requests: 1
+Actual remaining pending requests: 0
+Result: 0 pass, 1 fail. Defect NOT fixed in 1.18.33-company.2.

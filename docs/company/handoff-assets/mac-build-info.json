@@ -1,0 +1,18 @@
+{
+  "version": "1.18.33-company.2",
+  "sourceCommit": "624b723a91a4f6cd51db0fc0da16b49725ce5cf6",
+  "sourceBranch": "codex/company-v1",
+  "target": "opencode-darwin-arm64",
+  "auditEndpoint": "[REDACTED: supplied privately at build time]",
+  "ripgrepVersion": "15.1.0",
+  "builtAt": "2026-09-30T02:34:49.504597+00:00",
+  "bunVersion": "1.4.2",
+  "pluginIncluded": false,
+  "buildCommand": "OPENCODE_VERSION=1.18.33-company.2 OPENCODE_COMPLIANCE_ENDPOINT=<auditEndpoint> ./script/company/build.sh --skip-install",
+  "ripgrepSource": {
+    "name": "ripgrep-15.1.0-aarch64-apple-darwin.tar.gz",
+    "url": "https://github.com/BurntSushi/ripgrep/releases/download/15.1.0/ripgrep-15.1.0-aarch64-apple-darwin.tar.gz",
+    "sha256": "378e973289176ca0c6054054ee7f631a065874a352bf43f0fa60ef079b6ba715",
+    "githubDigestVerified": true
+  }
+}

@@ -1,0 +1,299 @@
+OpenCode 사내 적용 작업 인수인계
+최종 정리: 2026-10-01 KST
+
+0. 다음 Codex 세션이 먼저 읽을 내용
+
+현재 상태 (2026-10-01): 공개 문서를 정제하고 회사 브랜치 이력을 교체한다.
+- 이전 인수인계 커밋은 재사용하지 말고 정제된 origin 브랜치를 기준으로 이어받는다.
+- origin/codex/company-v1 및 origin/codex/company-v2 생성 완료.
+- 최초 HTTPS 인증 실패와 GitHub integration의 쓰기 403 이후, 사용자가 GitHub CLI
+  브라우저 인증을 완료했다. 계정은 kimsutto이며 이 저장소 ADMIN 권한을 확인했다.
+- /Users/a420591/.local/bin/gh 설치 및 macOS keyring 인증, Git HTTPS 연동 완료.
+  로그인 토큰이나 비밀번호는 이 문서/저장소에 보존하지 않는다.
+- git push --atomic --set-upstream origin codex/company-v1 codex/company-v2 성공.
+- 이후 인수인계 상태 문서를 갱신한다. 현재 정확한 tip은 git log 및 git ls-remote로 확인.
+- 원격 문서:
+  https://github.com/kimsutto/opencode_airgap/blob/codex/company-v1/docs/company/HANDOFF.ko.txt
+  https://github.com/kimsutto/opencode_airgap/blob/codex/company-v2/docs/company/HANDOFF.ko.txt
+- 오프라인 인계용 전체 Git bundle:
+  /Users/a420591/Desktop/OpenCode-v1-company.2/opencode-company-handoff.bundle
+  두 브랜치의 소스/이력/문서가 들어가며 상태 문서 커밋까지 재생성한다. 배포 ZIP은 별도다.
+  다른 PC에서는 git clone -b codex/company-v1 <bundle 전체 경로> opencode-company로 복원 가능.
+  이 경우 origin은 bundle 경로이므로 원격 작업 전 실제 GitHub URL로 설정해야 한다.
+
+사용자는 기존 사내 OpenCode 포크의 이력을 분석하고, 최신 v1과 v2에 기존 회사
+정책을 적용해 둘 다 사용해 보고 싶어 했다. 이후 v1 Windows/Mac을 우선 반입했다.
+현재 요청은 작업을 원격에 푸시하고 대화 내용·체크리스트를 파일로 보존하는 것이다.
+코드 수정이나 정책 결함 수정이 이번 인수인계 작성 과정에서 완료된 것은 아니다.
+
+가장 중요한 미해결 사항:
+- v1 1.18.33-company.2에는 병렬 승인 요청 + '항상 허용' 결함이 남아 있다.
+  2026-10-01 실제 Permission 서비스 테스트로 재현했다. 아래 6절 참조.
+  이전 전체 테스트 통과를 회사 정책 전체 충족의 증거로 해석하면 안 된다.
+- oh-my-openagent 5.1.4는 현재 검토한 v2의 플러그인 로더와 호환되지 않는다.
+- 실제 사내 모델/감사 서버 E2E, 실제 Windows 실행은 미검증이다.
+- 사용자 사내 API 키/모델 설정은 제공받거나 이 저장소에 저장하지 않았다.
+
+사용자는 복잡한 명령어 설명보다 바로 사용할 결과물을 선호한다.
+기본 전달 방식: OS별 ZIP, start.cmd / start.command, 정확한 폴더 링크.
+짧은 한국어로 진행 상황과 실제 검증 범위를 설명한다.
+
+1. Git 및 로컬 경로
+
+원격: https://github.com/kimsutto/opencode_airgap.git (origin)
+기존 작업 폴더: /Users/a420591/Desktop/opencode_airgap
+기존 dev: 1772e8ee6e. 이 checkout은 변경하지 않았다.
+사내 정책 기준 커밋: 7035979e0 (origin/codex/sync-upstream-20260714 계열).
+초기 사내 적용: release_airgap의 6e2f295bb.
+
+v1 작업 브랜치: codex/company-v1
+로컬: /Users/a420591/.codex/worktrees/company-v1-20260930/opencode_airgap
+공식 dev 기준: 2fa3363c924c5c3e367b84a87ae478296a0ed59b
+패키지: 1.18.33 / 사내 구현 커밋: 624b723a91
+
+v2 작업 브랜치: codex/company-v2
+로컬: /Users/a420591/.codex/worktrees/company-v2-20260930/opencode_airgap
+공식 v2 기준: 74dbc509d74df46a2523676dd4068225c4f0c9b0
+패키지: 2.0.20 / 사내 구현 커밋: b86c33ecf4
+
+각 브랜치에는 위 구현 커밋 이후 이 인수인계 문서 커밋이 추가된다.
+정확한 현재 tip은 git log -1로 확인한다. 기준 업스트림은 9월 30일 조회 당시 값이며,
+이 문서를 읽는 시점의 최신 upstream임을 의미하지 않는다.
+내부 정보가 포함됐던 문서 커밋을 브랜치 이력에서 제거하고 정제한 문서로 교체한다.
+기존 노출 커밋의 SHA나 민감한 값은 이 공개 문서에 재기록하지 않는다.
+dev 병합과 PR 생성은 수행하지 않았다. 이전 clone/bundle의 브랜치를 다시 push하지 않는다.
+
+다른 PC에서 이어받기:
+  git fetch origin
+  git switch --track origin/codex/company-v1
+이미 로컬 브랜치가 있다면 git switch codex/company-v1.
+같은 Mac에서는 브랜치가 managed worktree에 checkout되어 있으므로 위 로컬 경로로 이동한다.
+v2를 볼 때는 브랜치 이름을 codex/company-v2로 바꾼다.
+
+2. 적용한 사내 정책
+
+v1: packages/opencode/src/company 및 permission/plugin/TUI/build 관련 변경.
+v2: packages/core/src/company, permission/tool/session prompt/runner, CLI build, TUI 변경.
+
+- 모델 셸 도구의 allow / ask / 나머지 deny 목록을 코드에 고정.
+  v1 bash, v2 bash 및 shell 이름에 적용. Windows 전용 명령 목록 포함.
+- webfetch는 ask, websearch와 interactive_bash는 deny. MCP는 공식 동작 유지.
+- 일반 설정/기존 승인보다 회사 정책 평가가 우선한다.
+  단, v1의 이미 대기 중인 요청을 일괄 해제하는 경로에 6절 결함이 있다.
+- 사용자 메시지, 모델 응답, 도구 요청/결과, 권한 요청/응답을 감사 서버로 전송.
+- envelope: user_id = 로컬 IPv4, ts = KST, command = JSON 문자열.
+  직원 사번이 아니다. assistant.message에는 prompt와 response가 함께 들어간다.
+- 전송은 최대 2회, 각 시도 timeout 2초, 재시도 간격 250ms. 별도 로컬 감사 fallback 없음.
+- TUI 홈에 개인(신용)정보·민감정보 입력 주의 안내.
+- 감사 endpoint는 빌드 상수. 소스 개발 실행에는 이 상수가 없어 감사가 비활성화됨.
+  회사 사용/정책 검증은 사내 빌드 실행파일 기준으로 해야 한다.
+- 이는 완전한 OS/네트워크 sandbox가 아니다. 사용자 직접 셸(!), 플러그인 자체
+  프로세스/통신, 모델 공급자 통신 및 MCP 서버 권한을 일괄 통제한다고 설명하지 않는다.
+- allow 목록에는 cp/mv/sed/awk/dd 등도 있다. 모든 변경 작업에 승인을 요구하는 정책은 아니다.
+
+v2 추가 구현:
+- plugin hook와 저장 승인보다 강제 정책을 우선하고 강제 ask의 저장을 제한.
+- durable assistant 메시지와 해당 사용자 프롬프트를 DB에서 연결해 감사 전송.
+- native shell 도구 및 새로운 세션 실행 경로에 감사 연결.
+- 상세 코드는 각 구현 커밋과 docs/company/maintenance.ko.md 참고.
+
+3. 빌드와 실제 반입 파일
+
+사내 감사 URL은 공개 Git에 기록하지 않는다.
+빌드 시 OPENCODE_COMPLIANCE_ENDPOINT 환경변수로 비공개 전달한다.
+
+v1의 현재 사내 반입 버전: 1.18.33-company.2
+최초 company.1은 loopback 시험용이었다. 현재 v1 dist는 실제 URL 빌드로 교체되어 있다.
+v2는 아직 2.0.20-company.1, loopback 감사 URL의 시험용 빌드다.
+
+반입 폴더 (Git에는 실행파일/ZIP을 넣지 않음):
+/Users/a420591/Desktop/OpenCode-v1-company.2
+  Windows.zip  (약 61.4 MiB; Windows Intel/AMD x64)
+  Mac.zip      (약 47.9 MiB; Apple Silicon ARM64)
+  Windows/     opencode.exe, rg.exe, start.cmd, config/opencode.json, 라이선스/해시/설명
+  Mac/         opencode, rg, start.command, config/opencode.json, 라이선스/해시/설명
+  사내검증-체크리스트.txt
+  verification.txt, SHA256SUMS.txt
+
+Windows ARM, Intel Mac용 반입 ZIP은 만들지 않았다. 전체 빌드 dist에는 다른 target도 있다.
+ZIP에는 사내 모델 설정/API 키와 oh-my-openagent가 없다.
+config/opencode.json은 $schema와 autoupdate:false만 포함한다.
+모델 설정은 사용자가 사내에서 넣어야 한다.
+
+런처 동작:
+- 함께 든 rg가 PATH에서 우선하도록 설정.
+- XDG data/config/cache/state와 임시 경로를 독립된 v1 프로필로 지정.
+  Mac 기본: ~/.local/share/opencode-company/v1
+  Windows 기본: %LOCALAPPDATA%\opencode-company\v1
+  OPENCODE_COMPANY_HOME으로 프로필 경로 재지정 가능.
+- OPENCODE_CONFIG_DIR = 배포 폴더/config.
+- 자동 업데이트와 models.dev 모델 목록 fetch 비활성화.
+- OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true.
+- 인자가 없으면 프로젝트 전체 경로 입력을 받고 실행. 빈 입력은 사용자 홈.
+- 인자가 있으면 opencode에 그대로 전달 (예: --version, 프로젝트 경로).
+- 시스템 환경변수를 영구 수정하지 않음. 런처 없이 opencode만 실행하면 이 설정은 적용 안 됨.
+
+재현 빌드 (v1 worktree 루트):
+  export PATH="/tmp/opencode-company-tools/bun-darwin-aarch64:$PATH"
+  bun install --frozen-lockfile --os='*' --cpu='*'
+  env -u OPENCODE_RELEASE OPENCODE_VERSION=1.18.33-company.2 \
+    OPENCODE_COMPLIANCE_ENDPOINT="${OPENCODE_COMPLIANCE_ENDPOINT:?Set approved endpoint privately}" \
+    ./script/company/build.sh --skip-install
+
+Bun 1.4.2를 사용했고 저장소 요구 범위는 ^1.3.14다.
+--single 없이 전체 target 교차 빌드. Web UI 포함. OPENCODE_RELEASE는 설정하지 않는다.
+v1 주요 출력:
+  packages/opencode/dist/opencode-darwin-arm64/bin/opencode
+  packages/opencode/dist/opencode-windows-x64/bin/opencode.exe
+v2 출력:
+  packages/cli/dist/cli-darwin-arm64/bin/opencode
+
+v1 브랜치 docs/company/handoff-assets에 보존한 파일:
+- start.command / start.cmd: 실제 배포 런처 내용. 저장소에는 LF로 정규화했으며
+  Windows ZIP의 start.cmd는 CRLF다. 패키징 snapshot이 Windows 줄바꿈을 변환한다.
+- package-release.snapshot.py.txt: 패키징 스크립트 기록. 실제 endpoint는 제거하고
+  환경변수 입력으로 변경했다. 원래 로컬 경로가 들어 있는
+  기록용 snapshot이다. 다른 경로에서 재사용할 때 source/inputs/output을 수정해야 한다.
+  output.mkdir(exist_ok=False)이므로 기존 반입 폴더를 덮어쓰지 않는다.
+- ripgrep-inputs.json: 공식 다운로드 URL, SHA-256 및 GitHub digest 대조 결과.
+- mac/windows-build-info.json, mac/windows-SHA256SUMS.txt, release-zip-SHA256SUMS.txt.
+- release-verification.txt 및 승인 결함 재현 파일.
+v2 브랜치에서 이 assets가 필요하면 codex/company-v1을 읽는다.
+
+당시 원본 임시 입력: /tmp/opencode-v1-release-inputs
+당시 전체 빌드/검증 로그: /tmp/opencode-company-tools
+임시 파일은 삭제될 수 있으므로 저장소 handoff-assets와 설명을 우선한다.
+패키징 후 기동 테스트가 config/opencode.json에 $schema 및 config/.gitignore를 자동 생성했다.
+검증 후 실제 배포 파일로 SHA256SUMS와 ZIP을 다시 생성하고 무결성을 확인했다.
+
+4. 검증한 것 / 검증하지 않은 것
+
+2026-09-30 이전 완료한 v1 검증:
+- packages/opencode 전체 3619 pass, 22 skip, 1 todo, 0 fail (257 files).
+- opencode/plugin/tui 패키지 typecheck 통과.
+- loopback 모델/감사 HTTP 서버를 이용한 company.1 실제 CLI 5개 smoke 시나리오 통과:
+  일반 응답, 허용 셸, 금지 셸, 감사 prompt/response·tool 기록, 감사503 시 provider 차단.
+
+v2 검증:
+- 회사 정책/권한/세션 관련 400 테스트(7개 파일) 통과.
+- core/cli/tui typecheck, root bun run check(lint 및 35개 package typecheck) 통과.
+- 실제 company.1 CLI의 동일 loopback smoke 통과.
+
+추가 서브에이전트·Grep 검증:
+- v1 task/grep/subagent-data/plan-mode-subagent-bypass 38 pass.
+- v2 tool-subagent/ripgrep/command-subagent 26 pass.
+- v2 TUI completion-notices/prompt-footer 6 pass (총 추가 70 pass).
+- 두 실제 CLI에서 loopback 테스트 모델로 부모→자식 실행→결과 반환 및 양쪽 감사 기록 확인.
+- 테스트 harness는 subprocess.run(..., stdin=subprocess.DEVNULL)을 사용해야 한다.
+  v2 run은 파이프된 stdin을 프롬프트에 붙이므로 heredoc 입력을 상속시키면 검사가 오염된다.
+- PATH에 rg가 없고 다운로드를 실패시키면 두 버전의 resolver가 실패함을 확인.
+- 전용 cache/opencode/bin에 rg를 넣으면 두 버전이 정상 인식함을 확인.
+
+v1 company.2 실제 사내 URL 빌드:
+- Mac 및 Windows binary에 실제 endpoint(UTF-16LE 문자열)가 포함됨을 확인.
+  전체 URL을 ASCII bytes로만 찾으면 오탐 가능. 옛 loopback endpoint는 없음.
+- Mac start.command --version 정상, 신선한 프로필과 PATH=/usr/bin:/bin 상태에서
+  start.command debug rg search로 동봉 rg를 사용한 검색 성공.
+- Windows PE x86-64 아키텍처 확인. Mac ARM64 파일 확인.
+- rg 15.1.0 공식 archive digest 대조, ZIP CRC, 실행 권한, cmd CRLF, 파일 SHA-256 검사 통과.
+- 실제 감사 URL로 테스트 로그를 보내지 않았다. endpoint 내장 확인과 서버 수신 성공은 다르다.
+
+미검증:
+- 실제 Windows에서 실행/권한 UI/셸 동작.
+- 실제 사내 모델 설정, 인증, 사내 TLS/인증서 및 감사 URL 수신 E2E.
+- 사용자 환경의 실제 oh-my-openagent 설치 및 작동.
+- 모든 TUI 화면을 실제 OS에서 수동 시각 검증한 것은 아님.
+- 아래 6절의 신규 실패 때문에 전체 정책 통과 상태가 아니다.
+
+주의: script/company/smoke.py는 감사 URL이 loopback인 빌드를 전제로 한다.
+현재 v1 company.2 production-URL 바이너리로 그대로 돌리면 안 된다.
+별도 loopback endpoint 빌드를 준비하고 실제 회사 서버에 합성 테스트 로그를 보내지 않도록 한다.
+
+5. 사용자 질문에 답한 내용
+
+rg:
+- 두 버전의 Grep은 ripgrep 실행파일에 의존. 시스템/PATH 및 OpenCode cache/bin에서 탐색하고,
+  없으면 GitHub에서 15.1.0을 다운로드한다. 다운로드 실패 시 JS/system grep 대체 경로 없음.
+- Windows rg.exe와 Mac rg는 다르고 CPU별 파일도 다르다.
+- 배포본에는 Windows x64와 macOS ARM64 rg를 각각 동봉했다.
+
+내장 서브에이전트:
+- 현재 v1/v2는 실제 호출 및 결과 반환이 검증됐다.
+- v1은 진행 도구/재시도/완료 및 자식 세션 이동 표시 경로가 있다.
+- v2는 실행 중 개수, Subagents 탭, 자식 세션 이동 및 완료 알림이 있다.
+- v1 background는 별도 experimental flag가 필요하며 배포 런처가 켠다.
+- 중첩 깊이는 기본 1. 자식이 자식을 못 부르는 것이 항상 버그는 아니다.
+- 예전 사용자의 정확한 증상을 재현한 것은 아니므로 '이전 문제 전부 해결'이라고 단정하지 않았다.
+
+oh-my-openagent:
+- 확인한 npm 버전은 5.1.4. 사용자의 실제 설치 버전/설정은 아직 모른다.
+- default export {id, server} 형태이며 현재 v1 loader는 지원한다.
+- v2 loader는 {id, effect} 또는 {id, setup}을 요구해 이 버전과 불일치.
+- 공식 OmO Native 안내는 별도 제품이며 이 회사 정책이 자동으로 적용되지 않는다.
+- 근거: https://registry.npmjs.org/oh-my-openagent/5.1.4
+  https://github.com/code-yeongyu/oh-my-openagent/releases/tag/v5.0.0
+  https://github.com/code-yeongyu/oh-my-openagent/issues/8295
+- 호환성 최신 여부를 다시 묻는다면 새 버전/공식 문서를 다시 확인해야 한다.
+
+6. 미해결 승인 결함 (다음 수정 작업 최우선)
+
+파일: v1 packages/opencode/src/permission/index.ts
+ask()는 CompanyPolicy.hardcodedAction을 먼저 평가한다.
+하지만 reply(always)에서 같은 세션의 다른 pending 요청을 해제할 때는
+evaluate(..., approved)만 사용하고 회사의 forced ask 여부를 다시 적용하지 않는다.
+
+2026-10-01 재현:
+- 동일 sessionID, permission=bash, patterns=[curl --version] 요청 2개를 동시에 등록.
+- 첫 요청의 always 범위가 curl --version과 일치하도록 설정.
+- 2개가 pending인 상태에서 첫 요청을 always 승인.
+- 기대: 첫 요청만 완료, 두 번째 1개가 pending 유지.
+- 실제: pending 0개. 두 번째도 별도 승인 없이 해제.
+- 0 pass / 1 fail. 실제 Permission 서비스를 기존 instance fixture로 실행.
+  curl 프로세스나 모델/서버는 호출하지 않았다.
+- 새로 들어온 순차 요청은 ask()를 다시 타므로 이 동시 대기 경로와 구분한다.
+- v2에 같은 결함이 있다는 뜻은 아니다. v2는 별도 구현이며 동일 시나리오 미검증.
+
+사용자에게 이미 알린 내용:
+'이전 검증에서 놓친 경우. 수정 전에는 한 번만 허용을 쓰고 정책 검증 완료로 판정하지 말 것.'
+배포 company.2는 아직 수정하지 않았다. 체크리스트 P6은 실패 확인 상태다.
+
+재현 파일 (v1 브랜치): docs/company/handoff-assets/pending-approval-regression.test.ts.txt
+v1 worktree 루트에서:
+  cp docs/company/handoff-assets/pending-approval-regression.test.ts.txt \
+    packages/opencode/test/permission/company-approval-probe.test.ts
+  cd packages/opencode
+  bun test test/permission/company-approval-probe.test.ts --timeout 10000
+현재는 위 테스트가 실패해야 원래 증상을 재현한 것이다.
+파일이 이미 있으면 덮어쓰기 전에 내용을 확인한다.
+수정 작업 시 이 케이스를 정식 회귀 테스트로 통합하고, 일반 권한의 always 동작은 보존한다.
+순차/동시 회사 ask, 회사 deny, 다른 세션 독립성, 부모/자식 세션 승인을 함께 검토한다.
+수정·검증 후 버전을 올려 회사 URL로 다시 빌드하고 새 ZIP을 전달해야 한다.
+
+7. 체크리스트 파일과 사용 방법
+
+docs/company/checklist-v1.ko.txt
+원본 로컬: /Users/a420591/Desktop/OpenCode-v1-company.2/사내검증-체크리스트.txt
+
+F1~F7: 버전/고지/사내 모델/Read·Grep/편집·지속성/내장·background 서브에이전트.
+P1~P9: allow/ask 거절/반복 승인/deny/결합 명령/동시 승인 결함/웹 도구/설정 우선순위/자식 정책.
+L1~L3: 감사 이벤트·prompt-response/ID 연결·IPv4 식별/감사만 차단 시 실행 차단과 복구.
+각 OS별 통과/실패/미실시/해당없음, 증빙을 기록한다.
+AI의 설명만으로 통과시키지 않고 실제 도구 카드/결과와 서버 로그를 확인한다.
+! 직접 셸로 실행하면 회사의 모델 도구 정책 검증 경로가 아니다.
+감사 장애 검사는 모델 접속을 유지한 채 테스트 PC의 감사 연결만 차단해야 한다.
+전체 네트워크를 끊어 응답이 없는 것을 감사 정책 통과로 오인하지 않는다.
+
+8. 유지보수 및 주의사항
+
+- 사용자 제공 AGENTS.md 및 각 package AGENTS.md를 따른다.
+- tests는 packages/opencode 등 package 디렉터리에서 실행. root test 금지.
+- typecheck는 package의 bun typecheck. tsc 직접 호출 금지.
+- Conventional commit 사용. 기존 두 회사 브랜치에서 연속 작업 가능.
+- v2 세션 코어의 durable admission / process-local runner 경계를 유지한다.
+- 이 대화에서 Codex sub-agent를 생성하지 않았다. 제품 subagent 질문은
+  Codex 작업 위임 요청이 아니며, 사용자/AGENTS 명시 없이는 새 에이전트를 만들지 않는다.
+- ZIP/컴파일 바이너리/node_modules/프로필/API 키는 Git에 추가하지 않는다.
+- 내부 도메인, 실제 감사 endpoint, 조직 식별 문자열은 토큰이 아니어도 공개 Git에 기록하지 않는다.
+- 실제 endpoint가 포함된 build-info.json/패키징 입력/바이너리는 사내 반입용 로컬 파일로만 관리한다.
+- 소스와 재현 자료는 Git, 현재 실제 실행파일은 위 바탕화면 폴더에 있다.
+- 이 인수인계 저장 이후 진행된 수정 여부는 git log와 새 사용자 지시로 확인한다.

@@ -1,0 +1,18 @@
+{
+  "version": "1.18.33-company.2",
+  "sourceCommit": "624b723a91a4f6cd51db0fc0da16b49725ce5cf6",
+  "sourceBranch": "codex/company-v1",
+  "target": "opencode-windows-x64",
+  "auditEndpoint": "[REDACTED: supplied privately at build time]",
+  "ripgrepVersion": "15.1.0",
+  "builtAt": "2026-09-30T02:34:49.589587+00:00",
+  "bunVersion": "1.4.2",
+  "pluginIncluded": false,
+  "buildCommand": "OPENCODE_VERSION=1.18.33-company.2 OPENCODE_COMPLIANCE_ENDPOINT=<auditEndpoint> ./script/company/build.sh --skip-install",
+  "ripgrepSource": {
+    "name": "ripgrep-15.1.0-x86_64-pc-windows-msvc.zip",
+    "url": "https://github.com/BurntSushi/ripgrep/releases/download/15.1.0/ripgrep-15.1.0-x86_64-pc-windows-msvc.zip",
+    "sha256": "124510b94b6baa3380d051fdf4650eaa80a302c876d611e9dba0b2e18d87493a",
+    "githubDigestVerified": true
+  }
+}

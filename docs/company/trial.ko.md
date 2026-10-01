@@ -4,11 +4,24 @@
 공식 `dev` 기준: `2fa3363c924c5c3e367b84a87ae478296a0ed59b` (패키지 버전 1.18.33).
 사내 정책 기준: `7035979e0`.
 
+2026-10-01 인수인계: [HANDOFF.ko.txt](HANDOFF.ko.txt), [사내 검증 체크리스트](checklist-v1.ko.txt).
+현재 v1 dist와 반입 ZIP은 실제 사내 감사 URL로 빌드한 `1.18.33-company.2`다.
+동시에 대기하는 회사 승인 요청에 `always`를 적용하면 다른 대기 요청까지 승인되는 결함이 재현됐다.
+아직 수정하지 않았으며 체크리스트 P6은 실패 상태다. 기존 테스트 통과와 정책 전체 충족을 구분한다.
+
 ## 체험 빌드
 
-현재 macOS Apple Silicon 산출물은 **로컬 시험용**이다. 감사 주소는
-`http://127.0.0.1:18788/opencode/compliance`로 고정돼 있다.
-실제 사내 서버에 전송하는 배포본은 승인된 주소로 다시 빌드해야 한다.
+아래는 최초 `company.1` **로컬 시험용 빌드** 절차다. 해당 감사 주소는
+`http://127.0.0.1:18788/opencode/compliance`였다.
+현재 `company.2`는 사내 URL이 내장되어 있으므로 아래 시험을 실행하려면 먼저 별도
+loopback 빌드를 준비해야 한다. 시험 수집기를 켜도 실행파일에 고정된 URL은 바뀌지 않는다.
+
+```sh
+OPENCODE_COMPLIANCE_ENDPOINT='http://127.0.0.1:18788/opencode/compliance' \
+  OPENCODE_VERSION='1.18.33-company.1' ./script/company/build.sh --single --skip-install
+```
+
+이 빌드는 dist를 다시 만들므로 필요한 사내 배포 산출물은 먼저 보존한다.
 
 저장소 루트에서 별도 터미널에 시험 수집기를 실행한다 (둘 중 한 저장소에서 한 번만 실행).
 
@@ -34,7 +47,8 @@ python3 script/company/audit-demo.py --output /tmp/opencode-company-audit.jsonl
 Bun을 PATH에 준비하고 루트에서 `bun install --frozen-lockfile`을 수행한다.
 
 ```sh
-OPENCODE_COMPLIANCE_ENDPOINT='https://your-approved-audit-server/path' \
+OPENCODE_COMPLIANCE_ENDPOINT="${OPENCODE_COMPLIANCE_ENDPOINT:?Set approved endpoint privately}" \
+  OPENCODE_VERSION='1.18.33-company.2' \
   ./script/company/build.sh --single --skip-install
 ```
 
@@ -45,7 +59,8 @@ OPENCODE_COMPLIANCE_ENDPOINT='https://your-approved-audit-server/path' \
 ## 정책
 
 - 모델 셸 호출은 기존 회사 allow/ask 목록을 사용하며 그 밖의 명령은 거부한다.
-- `websearch`, `interactive_bash` 거부, `webfetch` 매번 승인. MCP는 공식 동작 유지.
+- `websearch`, `interactive_bash` 거부, `webfetch` 매번 승인이 목표 정책이다.
+  동시 대기 요청의 `always` 경로에는 위에 기록한 결함이 남아 있다. MCP는 공식 동작 유지.
 - 사용자 입력, 도구 요청·결과, 권한 요청·응답, 완료된 모델 응답을 감사 서버로 전송한다.
 - 외부 envelope는 `user_id`(로컬 IPv4), KST `ts`, JSON 문자열 `command`를 유지한다.
 - 감사 서버가 응답하지 않으면 두 번의 전송 시도 후 실패하며 로컬 대체 저장은 없다.
