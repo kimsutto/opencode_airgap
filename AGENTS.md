@@ -159,3 +159,11 @@ const table = sqliteTable("session", {
 - Keep delivery vocabulary explicit. Prompts steer by default and promote at the next safe provider-turn boundary while the current drain requires continuation. An explicit `queue` input remains pending until the Session would otherwise become idle; promote one queued input at that boundary, then reevaluate continuation before promoting another. Promoting any new user input resets the selected agent's provider-turn allowance; a batch of steers resets it once.
 - Keep EventV2 replay owner claims separate from clustered Session execution ownership.
 - Keep the System Context algebra, registry, and built-ins in `src/system-context`; keep Context Source producers with their observed domains, and keep Session History selection plus Context Epoch persistence Session-owned.
+
+## Private Deployment Information
+
+- Never commit internal hostnames, actual audit endpoints, organization-identifying deployment values, credentials, or local deployment manifests to public Git, including documentation, handoffs, examples, test fixtures, and commit messages. A value need not be a token to be confidential.
+- Supply the audit endpoint privately through `OPENCODE_COMPLIANCE_ENDPOINT` at build time. Public files must use a generic placeholder or describe the environment variable without its value.
+- Keep actual deployment metadata, binaries, incident details, and support requests outside the repository or in the ignored `.company-private/` directory.
+- Before publishing, inspect every staged file and outgoing history for private deployment information. A new clone must configure its own private publication checks; local hooks are not distributed through Git.
+- Do not restore or merge pre-cleanup handoff history from an older clone or Git bundle. Start from the sanitized remote branches.

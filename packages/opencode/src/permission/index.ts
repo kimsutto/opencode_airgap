@@ -6,6 +6,7 @@ import { Deferred, Effect, Layer, Context } from "effect"
 import os from "os"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { EventV2Bridge } from "@/event-v2-bridge"
+import { CompanyPolicy } from "@/company/policy"
 
 export const Event = PermissionV1.Event
 
@@ -70,7 +71,10 @@ const layer = Layer.effect(
       let needsAsk = false
 
       for (const pattern of request.patterns) {
-        const rule = evaluate(request.permission, pattern, ruleset, approved)
+        const forced = CompanyPolicy.hardcodedAction(request.permission, pattern)
+        const rule: PermissionV1.Rule = forced
+          ? { permission: request.permission, pattern: "*", action: forced }
+          : evaluate(request.permission, pattern, ruleset, approved)
         yield* Effect.logInfo("evaluated", { permission: request.permission, pattern, action: rule })
         if (rule.action === "deny") {
           return yield* new PermissionV1.DeniedError({
@@ -141,6 +145,14 @@ const layer = Layer.effect(
 
       yield* Deferred.succeed(existing.deferred, undefined)
       if (input.reply === "once") return
+      // Company-mandated approval applies to each request, even when a client sends "always".
+      if (
+        existing.info.patterns.some(
+          (pattern) => CompanyPolicy.hardcodedAction(existing.info.permission, pattern) === "ask",
+        )
+      ) {
+        return
+      }
 
       for (const pattern of existing.info.always) {
         approved.push({
@@ -153,7 +165,9 @@ const layer = Layer.effect(
       for (const [id, item] of pending.entries()) {
         if (item.info.sessionID !== existing.info.sessionID) continue
         const ok = item.info.patterns.every(
-          (pattern) => evaluate(item.info.permission, pattern, approved).action === "allow",
+          (pattern) =>
+            (CompanyPolicy.hardcodedAction(item.info.permission, pattern) ??
+              evaluate(item.info.permission, pattern, approved).action) === "allow",
         )
         if (!ok) continue
         pending.delete(id)
